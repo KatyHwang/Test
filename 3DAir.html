@@ -1,0 +1,2718 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title> 3D氣流圖 </title>
+</head>
+
+<body>
+    <script src="D:\SW\ASP.NET\Charts\Charts\js/echarts.js"></script>
+    <script src="D:\SW\ASP.NET\Charts\Charts\js/echarts-gl.js"></script>
+    <div id="main" style="width: 100%;height:500px;"></div>
+
+
+    <script>
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        //圖表內容
+
+        var wind = [
+            [10100, 1, 1, 0, 58.7534],
+            [10200, 1, 2, 0, 20.1982],
+            [10300, 1, 3, 0, 14.8577],
+            [10400, 1, 4, 0, 11.8155],
+            [10500, 1, 5, 0, 11.5788],
+            [10600, 1, 6, 0, 11.1069],
+            [10700, 1, 7, 0, 12.8004],
+            [10800, 1, 8, 0, 13.8996],
+            [10900, 1, 9, 0, 10.2874],
+            [11000, 1, 10, 0, 13.8602],
+            [11100, 1, 11, 0, 14.4468],
+            [11200, 1, 12, 0, 26.0412],
+            [11300, 1, 13, 0, 18.9140],
+            [11400, 1, 14, 0, 5.2313],
+            [11500, 1, 15, 0, 19.3514],
+            [11600, 1, 16, 0, 32.8870],
+            [11700, 1, 17, 0, 21.1869],
+            [11800, 1, 18, 0, 59.1557],
+            [11900, 1, 19, 0, 59.1214],
+            [12000, 1, 20, 0, 57.9228],
+            [12100, 1, 21, 0, 38.0257],
+            [12200, 1, 22, 0, 49.6223],
+            [12300, 1, 23, 0, 49.9817],
+            [12400, 1, 24, 0, 64.3068],
+            [12500, 1, 25, 0, 54.8001],
+            [12600, 1, 26, 0, 58.2215],
+            [12700, 1, 27, 0, 59.6892],
+            [12800, 1, 28, 0, 63.6860],
+            [20100, 2, 1, 0, -58.7534],
+            [20200, 2, 2, 0, -20.1982],
+            [20300, 2, 3, 0, -14.8577],
+            [20400, 2, 4, 0, -11.8155],
+            [20500, 2, 5, 0, -11.5788],
+            [20600, 2, 6, 0, -11.1069],
+            [20700, 2, 7, 0, -12.8004],
+            [20800, 2, 8, 0, -13.8996],
+            [20900, 2, 9, 0, -10.2874],
+            [21000, 2, 10, 0, -13.8602],
+            [21100, 2, 11, 0, -14.4468],
+            [21200, 2, 12, 0, -26.0412],
+            [21300, 2, 13, 0, -18.9140],
+            [21400, 2, 14, 0, -5.2313],
+            [21500, 2, 15, 0, -19.3514],
+            [21600, 2, 16, 0, -32.8870],
+            [21700, 2, 17, 0, -21.1869],
+            [21800, 2, 18, 0, -59.1557],
+            [21900, 2, 19, 0, -59.1214],
+            [22000, 2, 20, 0, -57.9228],
+            [22100, 2, 21, 0, -38.0257],
+            [22200, 2, 22, 0, -49.6223],
+            [22300, 2, 23, 0, -49.9817],
+            [22400, 2, 24, 0, -64.3068],
+            [22500, 2, 25, 0, -54.8001],
+            [22600, 2, 26, 0, -58.2215],
+            [22700, 2, 27, 0, -59.6892],
+            [22800, 2, 28, 0, -63.6860],
+
+        ];
+        var option = {
+            title: {
+                show: true,
+                text: '氣流圖',
+                textStyle: {
+                    color: '#3c3c3c'
+                }
+            },
+            toolbox: {
+                left: 20,
+
+                feature: {
+                    myExportObj: {
+                        title: 'Export OBJ',
+                        //  icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
+                        onclick: function() {
+                            var res = echarts.exportGL2PLY(myChart, {
+                                mainType: 'grid3D',
+                                index: 0
+                            });
+                            download(res, 'surface.ply', 'text/plain');
+                        }
+                    }
+                }
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function(data, color) {
+                    var a;
+                    var arr = [];
+                    var str = data.value;
+                    var ss;
+                    var uu;
+                    arr = str;
+                    if (data.seriesName == '右棚') {
+                        ss = 2;
+                        uu = arr[0] + 27;
+                    } else if (data.seriesName == '左棚') {
+                        ss = 1;
+                        uu = arr[0] - 1;
+                    }
+                    // alert(wind[uu][4] );
+                    a = 'Diagonal Airflow: ' + wind[uu][4] + ' <div style=transform:rotate(' + wind[uu][4] + 'deg);width:25px; height:20px;font-size:25px; >↓ </div>'
+
+                    a += data.seriesName +
+                        ' <span style=color:' + data.color + ';font-size:25px;>●</span>' +
+                        '<br>  shelf: ' + data.name +
+                        '<br> x (BAY): ' + arr[0];
+
+                    if (data.seriesName == '右棚') {
+                        a += '<br> Y (value): ' + (1 - arr[1]) + '<br> Z (LEVEL): ' + arr[2];
+                    } else if (data.seriesName == '左棚') {
+                        a += '<br> Y (value): ' + arr[1] + '<br> Z (LEVEL): ' + arr[2];
+                    } else {
+                        a += ' <br>Y (value) : ' + arr[1] + ' <br> Z (LEVEL) : ' + (5 - arr[2]);
+                    }
+
+                    return a;
+                }
+
+            },
+            legend: {
+                show: true, //顯示圖例
+                orient: 'vertical', //圖例垂直
+                left: 0, //左邊靠
+                top: 40
+
+            },
+            visualMap: {
+                show: true,
+                dimension: 1,
+                min: -0.1,
+                max: 1.1,
+                inRange: {
+                    color: ['#313695', '#74add1', '#fdae61', '#f46d43', '#d73027', '#a50026',
+                        //
+                        '#a50026', '#d73027', '#f46d43', '#fdae61', '#74add1', '#313695',
+                    ]
+                },
+                calculable: true,
+                textStyle: {
+                    color: '#fff'
+                },
+                orient: 'horizontal'
+            },
+            xAxis3D: {
+                name: 'BAY',
+                type: 'value',
+                min: 0,
+                max: 28,
+            },
+
+            yAxis3D: {
+                name: 'value',
+
+                min: -0.1,
+                max: 1.1,
+
+            },
+            zAxis3D: {
+                name: 'LEVEL',
+                min: 0,
+                max: 5,
+
+            },
+            grid3D: {
+                show: true,
+                boxHeight: 150,
+
+
+                temporalSuperSampling: {
+                    enable: true
+                },
+                viewControl: {
+                    beta: 90, //左右旋转的角度。
+
+                }
+            },
+
+            series: [
+
+                {
+                    name: '右棚',
+                    type: 'surface',
+
+                    yAxisIndex: 1,
+                    wireframe: {
+                        show: false //曲面图的网格线。
+                    },
+                    shading: 'color', //只显示颜色，不受光照等其它因素的影响。
+
+                    itemStyle: {
+                        opacity: 0.75, //透明度
+
+                    },
+                    data: [ //右棚
+                        {
+                            name: '20100',
+                            value: [1, 1, 0, 1, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20200',
+                            value: [2, 1, 0, 2, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20300',
+                            value: [3, 1, 0, 3, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20400',
+                            value: [4, 1, 0, 4, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20500',
+                            value: [5, 1, 0, 5, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20600',
+                            value: [6, 1, 0, 6, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20700',
+                            value: [7, 1, 0, 7, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20800',
+                            value: [8, 1, 0, 8, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20900',
+                            value: [9, 1, 0, 9, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21000',
+                            value: [10, 1, 0, 10, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21100',
+                            value: [11, 1, 0, 11, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21200',
+                            value: [12, 1, 0, 12, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21300',
+                            value: [13, 1, 0, 13, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21400',
+                            value: [14, 1, 0, 14, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21500',
+                            value: [15, 1, 0, 15, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21600',
+                            value: [16, 1, 0, 16, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21700',
+                            value: [17, 1, 0, 17, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21800',
+                            value: [18, 1, 0, 18, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21900',
+                            value: [19, 1, 0, 19, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22000',
+                            value: [20, 1, 0, 20, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22100',
+                            value: [21, 1, 0, 21, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22200',
+                            value: [22, 1, 0, 22, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22300',
+                            value: [23, 1, 0, 23, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22400',
+                            value: [24, 1, 0, 24, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22500',
+                            value: [25, 1, 0, 25, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22600',
+                            value: [26, 1, 0, 26, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22700',
+                            value: [27, 1, 0, 27, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22800',
+                            value: [28, 1, 0, 28, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20101',
+                            value: [1, 1, 1, 1, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20201',
+                            value: [2, 1, 1, 2, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20301',
+                            value: [3, 1, 1, 3, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20401',
+                            value: [4, 1, 1, 4, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20501',
+                            value: [5, 1, 1, 5, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20601',
+                            value: [6, 1, 1, 6, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20701',
+                            value: [7, 1, 1, 7, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20801',
+                            value: [8, 1, 1, 8, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20901',
+                            value: [9, 1, 1, 9, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21001',
+                            value: [10, 1.25, 1, 10, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '21101',
+                            value: [11, 1.15, 1, 11, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '21201',
+                            value: [12, 1.14, 1, 12, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '21301',
+                            value: [13, 0.588351351351351, 1, 13, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '21401',
+                            value: [14, 1, 1, 14, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21501',
+                            value: [15, 1, 1, 15, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21601',
+                            value: [16, 1, 1, 16, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21701',
+                            value: [17, 1, 1, 17, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21801',
+                            value: [18, 1, 1, 18, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21901',
+                            value: [19, 1, 1, 19, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22001',
+                            value: [20, 1, 1, 20, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22101',
+                            value: [21, 1, 1, 21, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22201',
+                            value: [22, 1, 1, 22, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22301',
+                            value: [23, 1, 1, 23, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22401',
+                            value: [24, 1, 1, 24, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22501',
+                            value: [25, 1, 1, 25, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22601',
+                            value: [26, 1, 1, 26, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22701',
+                            value: [27, 1, 1, 27, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22801',
+                            value: [28, 1, 1, 28, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20102',
+                            value: [1, 1, 2, 1, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20202',
+                            value: [2, 1, 2, 2, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20302',
+                            value: [3, 1, 2, 3, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20402',
+                            value: [4, 1, 2, 4, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20502',
+                            value: [5, 1, 2, 5, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20602',
+                            value: [6, 1, 2, 6, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20702',
+                            value: [7, 1, 2, 7, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20802',
+                            value: [8, 1, 2, 8, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20902',
+                            value: [9, 1, 2, 9, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21002',
+                            value: [10, 0.703185714285714, 2, 10, 2],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '21102',
+                            value: [11, 0.679585294117647, 2, 11, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21202',
+                            value: [12, 0.688541176470588, 2, 12, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21302',
+                            value: [13, 0.763868571428571, 2, 13, 2],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '21402',
+                            value: [14, 1, 2, 14, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21502',
+                            value: [15, 0.646317142857143, 2, 15, 2],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '21602',
+                            value: [16, 0.693047058823529, 2, 16, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21702',
+                            value: [17, 1, 2, 17, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21802',
+                            value: [18, 1, 2, 18, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21902',
+                            value: [19, 1, 2, 19, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22002',
+                            value: [20, 0.770320588235294, 2, 20, 2],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '22102',
+                            value: [21, 0.675766666666667, 2, 21, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22202',
+                            value: [22, 0.654270588235294, 2, 22, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22302',
+                            value: [23, 1, 2, 23, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22402',
+                            value: [24, 1, 2, 24, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22502',
+                            value: [25, 0.666618181818182, 2, 25, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22602',
+                            value: [26, 0.691597058823529, 2, 26, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22702',
+                            value: [27, 0.635481818181818, 2, 27, 2],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '22802',
+                            value: [28, 1, 2, 28, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20103',
+                            value: [1, 1, 3, 1, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20203',
+                            value: [2, 1, 3, 2, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20303',
+                            value: [3, 0.869373529411765, 3, 3, 3],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '20403',
+                            value: [4, 0.646558823529412, 3, 4, 3],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '20503',
+                            value: [5, 0.658175757575758, 3, 5, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '20603',
+                            value: [6, 0.631121212121212, 3, 6, 3],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '20703',
+                            value: [7, 0.683029411764706, 3, 7, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '20803',
+                            value: [8, 0.713518181818182, 3, 8, 3],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '20903',
+                            value: [9, 0.738323529411765, 3, 9, 3],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '21003',
+                            value: [10, 0.781106060606061, 3, 10, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '21103',
+                            value: [11, 0.738082352941176, 3, 11, 3],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '21203',
+                            value: [12, 0.774630303030303, 3, 12, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '21303',
+                            value: [13, 0.765421428571428, 3, 13, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '21403',
+                            value: [14, 1, 3, 14, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21503',
+                            value: [15, 0.68872, 3, 15, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21603',
+                            value: [16, 1, 3, 16, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21703',
+                            value: [17, 0.629782608695652, 3, 17, 3],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '21803',
+                            value: [18, 0.609908823529412, 3, 18, 3],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '21903',
+                            value: [19, 0.90459696969697, 3, 19, 3],
+                            itemStyle: {
+                                color: '#abd9e9'
+                            }
+                        },
+                        {
+                            name: '22003',
+                            value: [20, 0.882517647058824, 3, 20, 3],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '22103',
+                            value: [21, 0.753064705882353, 3, 21, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '22203',
+                            value: [22, 0.952923684210526, 3, 22, 3],
+                            itemStyle: {
+                                color: '#4575b4'
+                            }
+                        },
+                        {
+                            name: '22303',
+                            value: [23, 0.693001162790698, 3, 23, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22403',
+                            value: [24, 0.938294117647059, 3, 24, 3],
+                            itemStyle: {
+                                color: '#74add1'
+                            }
+                        },
+                        {
+                            name: '22503',
+                            value: [25, 0.734483333333333, 3, 25, 3],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '22603',
+                            value: [26, 0.70670701754386, 3, 26, 3],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '22703',
+                            value: [27, 0.711942424242424, 3, 27, 3],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '22803',
+                            value: [28, 1, 3, 28, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20104',
+                            value: [1, 1, 4, 1, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20204',
+                            value: [2, 1, 4, 2, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20304',
+                            value: [3, 0.6466, 4, 3, 4],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '20404',
+                            value: [4, 0.667611764705882, 4, 4, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '20504',
+                            value: [5, 0.644461764705882, 4, 5, 4],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '20604',
+                            value: [6, 0.728019444444444, 4, 6, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '20704',
+                            value: [7, 0.727276470588235, 4, 7, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '20804',
+                            value: [8, 0.742824324324324, 4, 8, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '20904',
+                            value: [9, 0.702272222222222, 4, 9, 4],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '21004',
+                            value: [10, 0.663514705882353, 4, 10, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21104',
+                            value: [11, 0.792164705882353, 4, 11, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '21204',
+                            value: [12, 0.66915641025641, 4, 12, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21304',
+                            value: [13, 0.686493939393939, 4, 13, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21404',
+                            value: [14, 1, 4, 14, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21504',
+                            value: [15, 0.6951, 4, 15, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21604',
+                            value: [16, 1, 4, 16, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21704',
+                            value: [17, 0.657269696969697, 4, 17, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '21804',
+                            value: [18, 0.768341176470588, 4, 18, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '21904',
+                            value: [19, 0.7535, 4, 19, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '22004',
+                            value: [20, 0.771382352941177, 4, 20, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '22104',
+                            value: [21, 0.872994117647059, 4, 21, 4],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '22204',
+                            value: [22, 0.712944117647059, 4, 22, 4],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '22304',
+                            value: [23, 0.663309090909091, 4, 23, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22404',
+                            value: [24, 0.756723529411765, 4, 24, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '22504',
+                            value: [25, 0.678172727272727, 4, 25, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22604',
+                            value: [26, 0.743341176470588, 4, 26, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '22704',
+                            value: [27, 0.6832, 4, 27, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '22804',
+                            value: [28, 0.877213333333333, 4, 28, 4],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '20105',
+                            value: [1, 1, 5, 1, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20205',
+                            value: [2, 1, 5, 2, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20305',
+                            value: [3, 1, 5, 3, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20405',
+                            value: [4, 1, 5, 4, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20505',
+                            value: [5, 1, 5, 5, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20605',
+                            value: [6, 1, 5, 6, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20705',
+                            value: [7, 1, 5, 7, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20805',
+                            value: [8, 1, 5, 8, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '20905',
+                            value: [9, 1, 5, 9, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21005',
+                            value: [10, 1, 5, 10, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21105',
+                            value: [11, 1, 5, 11, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21205',
+                            value: [12, 1, 5, 12, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21305',
+                            value: [13, 1, 5, 13, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21405',
+                            value: [14, 1, 5, 14, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21505',
+                            value: [15, 1, 5, 15, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21605',
+                            value: [16, 1, 5, 16, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21705',
+                            value: [17, 1, 5, 17, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21805',
+                            value: [18, 1, 5, 18, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '21905',
+                            value: [19, 1, 5, 19, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22005',
+                            value: [20, 1, 5, 20, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22105',
+                            value: [21, 1, 5, 21, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22205',
+                            value: [22, 1, 5, 22, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22305',
+                            value: [23, 1, 5, 23, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22405',
+                            value: [24, 1, 5, 24, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22505',
+                            value: [25, 1, 5, 25, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22605',
+                            value: [26, 1, 5, 26, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22705',
+                            value: [27, 1, 5, 27, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '22805',
+                            value: [28, 1, 5, 28, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                    ]
+                }, {
+                    name: 'Ceilng ',
+                    type: 'surface',
+                    parametric: true,
+                    wireframe: {
+                        show: false
+                    },
+                    shading: 'color', //只显示颜色，不受光照等其它因素的影响。
+
+                    itemStyle: {
+                        opacity: 0.75,
+
+                    },
+                    data: [
+                        //Ceilng 
+                        [1, 0.45, 5 - 0.36, 1, 1],
+                        [2, 0.45, 5 - 0.36, 2, 2],
+                        [3, 0.45, 5 - 0.36, 3, 2],
+                        [4, 0.45, 5 - 0.36, 4, 2],
+                        [5, 0.45, 5 - 0.36, 5, 2],
+                        [6, 0.45, 5 - 0.36, 6, 2],
+                        [7, 0.45, 5 - 0.36, 7, 2],
+                        [8, 0.45, 5 - 0.36, 8, 2],
+                        [9, 0.45, 5 - 0.36, 9, 2],
+                        [10, 0.45, 5 - 0.36, 10, 2],
+                        [11, 0.45, 5 - 0.36, 11, 2],
+                        [12, 0.45, 5 - 0.36, 12, 2],
+                        [13, 0.45, 5 - 0.36, 13, 2],
+                        [14, 0.45, 5 - 0.36, 14, 2],
+                        [15, 0.45, 5 - 0.36, 15, 2],
+                        [16, 0.45, 5 - 0.36, 16, 2],
+                        [17, 0.45, 5 - 0.36, 17, 2],
+                        [18, 0.45, 5 - 0.36, 18, 2],
+                        [19, 0.45, 5 - 0.36, 19, 2],
+                        [20, 0.45, 5 - 0.36, 20, 2],
+                        [21, 0.45, 5 - 0.36, 21, 2],
+                        [22, 0.45, 5 - 0.36, 22, 2],
+                        [23, 0.45, 5 - 0.36, 23, 2],
+                        [24, 0.45, 5 - 0.36, 24, 2],
+                        [25, 0.45, 5 - 0.36, 25, 2],
+                        [26, 0.45, 5 - 0.36, 26, 2],
+                        [27, 0.45, 5 - 0.36, 27, 2],
+                        [28, 0.45, 5 - 0.36, 28, 2],
+
+                        [1, 0.5, 5 - 0.36, 1, 2],
+                        [2, 0.5, 5 - 0.36, 2, 2],
+                        [3, 0.5, 5 - 0.36, 3, 2],
+                        [4, 0.5, 5 - 0.36, 4, 2],
+                        [5, 0.5, 5 - 0.36, 5, 2],
+                        [6, 0.5, 5 - 0.36, 6, 2],
+                        [7, 0.5, 5 - 0.36, 7, 2],
+                        [8, 0.5, 5 - 0.36, 8, 2],
+                        [9, 0.5, 5 - 0.36, 9, 2],
+                        [10, 0.5, 5 - 0.36, 10, 2],
+                        [11, 0.5, 5 - 0.36, 11, 2],
+                        [12, 0.5, 5 - 0.36, 12, 2],
+                        [13, 0.5, 5 - 0.36, 13, 2],
+                        [14, 0.5, 5 - 0.36, 14, 2],
+                        [15, 0.5, 5 - 0.36, 15, 2],
+                        [16, 0.5, 5 - 0.36, 16, 2],
+                        [17, 0.5, 5 - 0.36, 17, 2],
+                        [18, 0.5, 5 - 0.36, 18, 2],
+                        [19, 0.5, 5 - 0.36, 19, 2],
+                        [20, 0.5, 5 - 0.36, 20, 2],
+                        [21, 0.5, 5 - 0.36, 21, 2],
+                        [22, 0.5, 5 - 0.36, 22, 2],
+                        [23, 0.5, 5 - 0.36, 23, 2],
+                        [24, 0.5, 5 - 0.36, 24, 2],
+                        [25, 0.5, 5 - 0.36, 25, 2],
+                        [26, 0.5, 5 - 0.36, 26, 2],
+                        [27, 0.5, 5 - 0.36, 27, 2],
+                        [28, 0.5, 5 - 0.36, 28, 2],
+
+                        [1, 0.6, 5 - 0.36, 1, 2],
+                        [2, 0.6, 5 - 0.36, 2, 2],
+                        [3, 0.6, 5 - 0.36, 3, 2],
+                        [4, 0.6, 5 - 0.36, 4, 2],
+                        [5, 0.6, 5 - 0.36, 5, 2],
+                        [6, 0.6, 5 - 0.36, 6, 2],
+                        [7, 0.6, 5 - 0.36, 7, 2],
+                        [8, 0.6, 5 - 0.36, 8, 2],
+                        [9, 0.6, 5 - 0.36, 9, 2],
+                        [10, 0.6, 5 - 0.36, 10, 2],
+                        [11, 0.6, 5 - 0.36, 11, 2],
+                        [12, 0.6, 5 - 0.36, 12, 2],
+                        [13, 0.6, 5 - 0.36, 13, 2],
+                        [14, 0.6, 5 - 0.36, 14, 2],
+                        [15, 0.6, 5 - 0.36, 15, 2],
+                        [16, 0.6, 5 - 0.36, 16, 2],
+                        [17, 0.6, 5 - 0.36, 17, 2],
+                        [18, 0.6, 5 - 0.36, 18, 2],
+                        [19, 0.6, 5 - 0.36, 19, 2],
+                        [20, 0.6, 5 - 0.36, 20, 2],
+                        [21, 0.6, 5 - 0.36, 21, 2],
+                        [22, 0.6, 5 - 0.36, 22, 2],
+                        [23, 0.6, 5 - 0.36, 23, 2],
+                        [24, 0.6, 5 - 0.36, 24, 2],
+                        [25, 0.6, 5 - 0.36, 25, 2],
+                        [26, 0.6, 5 - 0.36, 26, 2],
+                        [27, 0.6, 5 - 0.36, 27, 2],
+                        [28, 0.6, 5 - 0.36, 28, 2],
+
+
+
+                    ]
+                },
+
+                {
+
+                    name: '左棚',
+                    type: 'surface',
+                    parametric: false,
+                    wireframe: {
+                        show: false
+                    },
+                    shading: 'color', //只显示颜色，不受光照等其它因素的影响。
+
+                    itemStyle: {
+                        opacity: 0.9,
+
+                    },
+
+                    data: [
+
+                        //左棚
+                        {
+                            name: '10100',
+                            value: [1, 0, 0, 1, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10200',
+                            value: [2, 0, 0, 2, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10300',
+                            value: [3, 0, 0, 3, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10400',
+                            value: [4, 0, 0, 4, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10500',
+                            value: [5, 0, 0, 5, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10600',
+                            value: [6, 0, 0, 6, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10700',
+                            value: [7, 0, 0, 7, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10800',
+                            value: [8, 0, 0, 8, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10900',
+                            value: [9, 0, 0, 9, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11000',
+                            value: [10, 0, 0, 10, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11100',
+                            value: [11, 0, 0, 11, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11200',
+                            value: [12, 0, 0, 12, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11300',
+                            value: [13, 0, 0, 13, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11400',
+                            value: [14, 0, 0, 14, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11500',
+                            value: [15, 0, 0, 15, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11600',
+                            value: [16, 0, 0, 16, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11700',
+                            value: [17, 0, 0, 17, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11800',
+                            value: [18, 0, 0, 18, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11900',
+                            value: [19, 0, 0, 19, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12000',
+                            value: [20, 0, 0, 20, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12100',
+                            value: [21, 0, 0, 21, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12200',
+                            value: [22, 0, 0, 22, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12300',
+                            value: [23, 0, 0, 23, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12400',
+                            value: [24, 0, 0, 24, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12500',
+                            value: [25, 0, 0, 25, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12600',
+                            value: [26, 0, 0, 26, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12700',
+                            value: [27, 0, 0, 27, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12800',
+                            value: [28, 0, 0, 28, 0],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10101',
+                            value: [1, -0.33, 1, 1, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '10201',
+                            value: [2, -0.14, 1, 2, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '10301',
+                            value: [3, 0, 1, 3, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10401',
+                            value: [4, 0, 1, 4, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10501',
+                            value: [5, 0, 1, 5, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10601',
+                            value: [6, 0.0908088235294118, 1, 6, 1],
+                            itemStyle: {
+                                color: '#abd9e9'
+                            }
+                        },
+                        {
+                            name: '10701',
+                            value: [7, 0, 1, 7, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10801',
+                            value: [8, -0.08, 1, 8, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '10901',
+                            value: [9, 0.03, 1, 9, 1],
+                            itemStyle: {
+                                color: '#4575b4'
+                            }
+                        },
+                        {
+                            name: '11001',
+                            value: [10, -0.08, 1, 10, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '11101',
+                            value: [11, 0, 1, 11, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11201',
+                            value: [12, 0, 1, 12, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11301',
+                            value: [13, 0, 1, 13, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11401',
+                            value: [14, 0, 1, 14, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11501',
+                            value: [15, 0, 1, 15, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11601',
+                            value: [16, 0, 1, 16, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11701',
+                            value: [17, 0, 1, 17, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11801',
+                            value: [18, -1.03, 1, 18, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '11901',
+                            value: [19, -0.69, 1, 19, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '12001',
+                            value: [20, -0.67, 1, 20, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '12101',
+                            value: [21, 0, 1, 21, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12201',
+                            value: [22, 0, 1, 22, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12301',
+                            value: [23, 0, 1, 23, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12401',
+                            value: [24, -0.39, 1, 24, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '12501',
+                            value: [25, -0.17, 1, 25, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '12601',
+                            value: [26, -0.28, 1, 26, 1],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '12701',
+                            value: [27, 0, 1, 27, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12801',
+                            value: [28, 0, 1, 28, 1],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10102',
+                            value: [1, 0, 2, 1, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10202',
+                            value: [2, 0.27525045045045, 2, 2, 2],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '10302',
+                            value: [3, 0, 2, 3, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10402',
+                            value: [4, 0, 2, 4, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10502',
+                            value: [5, 0, 2, 5, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10602',
+                            value: [6, 0.173152941176471, 2, 6, 2],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '10702',
+                            value: [7, 0.252011764705882, 2, 7, 2],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '10802',
+                            value: [8, 0.283094520547945, 2, 8, 2],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '10902',
+                            value: [9, 0.281301470588235, 2, 9, 2],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '11002',
+                            value: [10, 0.218252054794521, 2, 10, 2],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '11102',
+                            value: [11, 0.191119117647059, 2, 11, 2],
+                            itemStyle: {
+                                color: '#f9f900'
+                            }
+                        },
+                        {
+                            name: '11202',
+                            value: [12, 0, 2, 12, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11302',
+                            value: [13, 0, 2, 13, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11402',
+                            value: [14, 0, 2, 14, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11502',
+                            value: [15, 0, 2, 15, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11602',
+                            value: [16, 0.249932352941176, 2, 16, 2],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '11702',
+                            value: [17, 0.204041176470588, 2, 17, 2],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '11802',
+                            value: [18, 0.202541791044776, 2, 18, 2],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '11902',
+                            value: [19, 0.251235, 2, 19, 2],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '12002',
+                            value: [20, 0.321629850746269, 2, 20, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '12102',
+                            value: [21, 0.325064864864865, 2, 21, 2],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '12202',
+                            value: [22, 0, 2, 22, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12302',
+                            value: [23, 0, 2, 23, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12402',
+                            value: [24, 0.261938235294118, 2, 24, 2],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '12502',
+                            value: [25, 0.378597142857143, 2, 25, 2],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '12602',
+                            value: [26, 0.193920512820513, 2, 26, 2],
+                            itemStyle: {
+                                color: '#f9f900'
+                            }
+                        },
+                        {
+                            name: '12702',
+                            value: [27, 0, 2, 27, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12802',
+                            value: [28, 0, 2, 28, 2],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10103',
+                            value: [1, 0, 3, 1, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10203',
+                            value: [2, 0.262197727272727, 3, 2, 3],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '10303',
+                            value: [3, 0.212823529411765, 3, 3, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '10403',
+                            value: [4, 0.279326470588235, 3, 4, 3],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '10503',
+                            value: [5, 0.264357575757576, 3, 5, 3],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '10603',
+                            value: [6, 0.224111764705882, 3, 6, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '10703',
+                            value: [7, 0.184476470588235, 3, 7, 3],
+                            itemStyle: {
+                                color: '#f9f900'
+                            }
+                        },
+                        {
+                            name: '10803',
+                            value: [8, 0.107324324324324, 3, 8, 3],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '10903',
+                            value: [9, 0.319267647058824, 3, 9, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '11003',
+                            value: [10, 0.265066666666667, 3, 10, 3],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '11103',
+                            value: [11, 0.364752941176471, 3, 11, 3],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '11203',
+                            value: [12, 0, 3, 12, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11303',
+                            value: [13, 0, 3, 13, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11403',
+                            value: [14, 0, 3, 14, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11503',
+                            value: [15, 0, 3, 15, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11603',
+                            value: [16, 0, 3, 16, 3],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11703',
+                            value: [17, 0.348584848484848, 3, 17, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '11803',
+                            value: [18, 0.370182352941177, 3, 18, 3],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '11903',
+                            value: [19, 0.298421052631579, 3, 19, 3],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '12003',
+                            value: [20, 0.295723529411765, 3, 20, 3],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '12103',
+                            value: [21, 0.183531578947368, 3, 21, 3],
+                            itemStyle: {
+                                color: '#f9f900'
+                            }
+                        },
+                        {
+                            name: '12203',
+                            value: [22, 0.2388, 3, 22, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '12303',
+                            value: [23, 0.266335294117647, 3, 23, 3],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '12403',
+                            value: [24, 0.204808823529412, 3, 24, 3],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '12503',
+                            value: [25, 0.306834210526316, 3, 25, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '12603',
+                            value: [26, 0.322298360655738, 3, 26, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '12703',
+                            value: [27, 0.105878787878788, 3, 27, 3],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '12803',
+                            value: [28, 0.3037, 3, 28, 3],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '10104',
+                            value: [1, 0, 4, 1, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10204',
+                            value: [2, 0.19705, 4, 2, 4],
+                            itemStyle: {
+                                color: '#f9f900'
+                            }
+                        },
+                        {
+                            name: '10304',
+                            value: [3, 0.324464705882353, 4, 3, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '10404',
+                            value: [4, 0.300190909090909, 4, 4, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '10504',
+                            value: [5, 0.21235, 4, 5, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '10604',
+                            value: [6, 0.214078787878788, 4, 6, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '10704',
+                            value: [7, 0.114035135135135, 4, 7, 4],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '10804',
+                            value: [8, 0.253502941176471, 4, 8, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '10904',
+                            value: [9, 0.265558823529412, 4, 9, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '11004',
+                            value: [10, 0.354888235294118, 4, 10, 4],
+                            itemStyle: {
+                                color: '#a50026'
+                            }
+                        },
+                        {
+                            name: '11104',
+                            value: [11, 0.227097777777778, 4, 11, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '11204',
+                            value: [12, 0, 4, 12, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11304',
+                            value: [13, 0, 4, 13, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11404',
+                            value: [14, 0, 4, 14, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11504',
+                            value: [15, 0, 4, 15, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11604',
+                            value: [16, 0, 4, 16, 4],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11704',
+                            value: [17, 0.12965, 4, 17, 4],
+                            itemStyle: {
+                                color: '#e0f3f8'
+                            }
+                        },
+                        {
+                            name: '11804',
+                            value: [18, 0.341745714285714, 4, 18, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '11904',
+                            value: [19, 0.315629411764706, 4, 19, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '12004',
+                            value: [20, 0.2603, 4, 20, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '12104',
+                            value: [21, 0.269188235294118, 4, 21, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '12204',
+                            value: [22, 0.179457446808511, 4, 22, 4],
+                            itemStyle: {
+                                color: '#f9f900'
+                            }
+                        },
+                        {
+                            name: '12304',
+                            value: [23, 0.2617, 4, 23, 4],
+                            itemStyle: {
+                                color: '#ff9224'
+                            }
+                        },
+                        {
+                            name: '12404',
+                            value: [24, 0.347056, 4, 24, 4],
+                            itemStyle: {
+                                color: '#d73027'
+                            }
+                        },
+                        {
+                            name: '12504',
+                            value: [25, 0.281032352941177, 4, 25, 4],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '12604',
+                            value: [26, 0.293402941176471, 4, 26, 4],
+                            itemStyle: {
+                                color: '#f46d43'
+                            }
+                        },
+                        {
+                            name: '12704',
+                            value: [27, 0.206488235294118, 4, 27, 4],
+                            itemStyle: {
+                                color: '#eac100'
+                            }
+                        },
+                        {
+                            name: '12804',
+                            value: [28, 0.0647, 4, 28, 4],
+                            itemStyle: {
+                                color: '#74add1'
+                            }
+                        },
+                        {
+                            name: '10105',
+                            value: [1, 0, 5, 1, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10205',
+                            value: [2, 0, 5, 2, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10305',
+                            value: [3, 0, 5, 3, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10405',
+                            value: [4, 0, 5, 4, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10505',
+                            value: [5, 0, 5, 5, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10605',
+                            value: [6, 0, 5, 6, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10705',
+                            value: [7, 0, 5, 7, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10805',
+                            value: [8, 0, 5, 8, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '10905',
+                            value: [9, 0, 5, 9, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11005',
+                            value: [10, 0, 5, 10, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11105',
+                            value: [11, 0, 5, 11, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11205',
+                            value: [12, 0, 5, 12, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11305',
+                            value: [13, 0, 5, 13, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11405',
+                            value: [14, 0, 5, 14, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11505',
+                            value: [15, 0, 5, 15, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11605',
+                            value: [16, 0, 5, 16, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11705',
+                            value: [17, 0, 5, 17, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11805',
+                            value: [18, 0, 5, 18, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '11905',
+                            value: [19, 0, 5, 19, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12005',
+                            value: [20, 0, 5, 20, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12105',
+                            value: [21, 0, 5, 21, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12205',
+                            value: [22, 0, 5, 22, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12305',
+                            value: [23, 0, 5, 23, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12405',
+                            value: [24, 0, 5, 24, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12505',
+                            value: [25, 0, 5, 25, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12605',
+                            value: [26, 0, 5, 26, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12705',
+                            value: [27, 0, 5, 27, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+                        {
+                            name: '12805',
+                            value: [28, 0, 5, 28, 5],
+                            itemStyle: {
+                                color: '#313695'
+                            }
+                        },
+
+                    ]
+                }
+
+            ]
+        };
+
+
+
+
+
+        //--------------------------------
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+        myChart.on('click', function(params) {
+            window.open('http://localhost:54219/eCharts1.aspx?wd=' + encodeURIComponent(params.value));
+
+        });
+
+    </script>
+</body>
+
+</html>
